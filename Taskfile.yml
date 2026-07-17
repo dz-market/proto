@@ -51,7 +51,8 @@ tasks:
             - buf generate
             - task: swagger:normalize
             - git add -A -N gen
-            - git diff --exit-code -- gen go.mod go.sum
+            - git diff --exit-code -- gen go.mod go.sum ':(exclude)gen/go/**/service.pb.go'
+            - git checkout -- 'gen/go/**/service.pb.go'
 
     release:
         desc: "Tag and push a release: task release v=X.Y.Z"
