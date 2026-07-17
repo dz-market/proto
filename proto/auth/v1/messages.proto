@@ -87,7 +87,11 @@ message LoginResponse {
 
 // Request to exchange a refresh token for a new token pair.
 message RefreshRequest {
-  option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_schema) = {json_schema: {required: ["refresh_token"]}};
+  option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_schema) = {
+    json_schema: {
+      required: ["refresh_token"]
+    }
+  };
 
   // Current opaque refresh token. It is revoked and replaced on success.
   string refresh_token = 1 [
@@ -104,7 +108,11 @@ message RefreshResponse {
 
 // Request to revoke a refresh token and end its session.
 message LogoutRequest {
-  option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_schema) = {json_schema: {required: ["refresh_token"]}};
+  option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_schema) = {
+    json_schema: {
+      required: ["refresh_token"]
+    }
+  };
 
   // Refresh token to revoke.
   string refresh_token = 1 [

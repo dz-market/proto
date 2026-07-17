@@ -3,7 +3,6 @@ edition = "2024";
 package auth.v1;
 
 import "auth/v1/messages.proto";
-import "google/rpc/status.proto";
 import option "google/api/annotations.proto";
 import option "protoc-gen-openapiv2/options/annotations.proto";
 
@@ -30,7 +29,9 @@ option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_swagger) = {
     key: "500"
     value: {
       description: "Internal server error."
-      schema: {json_schema: {ref: ".google.rpc.Status"}}
+      schema: {
+        json_schema: {ref: ".google.rpc.Status"}
+      }
     }
   }
 };
@@ -53,21 +54,27 @@ service AuthService {
         key: "201"
         value: {
           description: "Account created; a new session is opened."
-          schema: {json_schema: {ref: ".auth.v1.RegisterResponse"}}
+          schema: {
+            json_schema: {ref: ".auth.v1.RegisterResponse"}
+          }
         }
       }
       responses: {
         key: "400"
         value: {
           description: "Validation failed."
-          schema: {json_schema: {ref: ".google.rpc.Status"}}
+          schema: {
+            json_schema: {ref: ".google.rpc.Status"}
+          }
         }
       }
       responses: {
         key: "409"
         value: {
           description: "An account with this email already exists."
-          schema: {json_schema: {ref: ".google.rpc.Status"}}
+          schema: {
+            json_schema: {ref: ".google.rpc.Status"}
+          }
         }
       }
     };
@@ -87,21 +94,27 @@ service AuthService {
         key: "200"
         value: {
           description: "Authenticated; a new session is opened."
-          schema: {json_schema: {ref: ".auth.v1.LoginResponse"}}
+          schema: {
+            json_schema: {ref: ".auth.v1.LoginResponse"}
+          }
         }
       }
       responses: {
         key: "400"
         value: {
           description: "Validation failed."
-          schema: {json_schema: {ref: ".google.rpc.Status"}}
+          schema: {
+            json_schema: {ref: ".google.rpc.Status"}
+          }
         }
       }
       responses: {
         key: "401"
         value: {
           description: "Unknown email or wrong password."
-          schema: {json_schema: {ref: ".google.rpc.Status"}}
+          schema: {
+            json_schema: {ref: ".google.rpc.Status"}
+          }
         }
       }
     };
@@ -123,21 +136,27 @@ service AuthService {
         key: "200"
         value: {
           description: "Tokens rotated; the previous refresh token is revoked."
-          schema: {json_schema: {ref: ".auth.v1.RefreshResponse"}}
+          schema: {
+            json_schema: {ref: ".auth.v1.RefreshResponse"}
+          }
         }
       }
       responses: {
         key: "400"
         value: {
           description: "Validation failed."
-          schema: {json_schema: {ref: ".google.rpc.Status"}}
+          schema: {
+            json_schema: {ref: ".google.rpc.Status"}
+          }
         }
       }
       responses: {
         key: "401"
         value: {
           description: "Refresh token is unknown, expired, or was already rotated (possible theft - the whole session is revoked)."
-          schema: {json_schema: {ref: ".google.rpc.Status"}}
+          schema: {
+            json_schema: {ref: ".google.rpc.Status"}
+          }
         }
       }
     };
@@ -157,14 +176,18 @@ service AuthService {
         key: "200"
         value: {
           description: "Refresh token revoked; the session is ended."
-          schema: {json_schema: {ref: ".auth.v1.LogoutResponse"}}
+          schema: {
+            json_schema: {ref: ".auth.v1.LogoutResponse"}
+          }
         }
       }
       responses: {
         key: "400"
         value: {
           description: "Validation failed."
-          schema: {json_schema: {ref: ".google.rpc.Status"}}
+          schema: {
+            json_schema: {ref: ".google.rpc.Status"}
+          }
         }
       }
     };

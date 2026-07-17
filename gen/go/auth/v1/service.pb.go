@@ -7,7 +7,6 @@
 package authv1
 
 import (
-	_ "google.golang.org/genproto/googleapis/rpc/status"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	reflect "reflect"
@@ -25,58 +24,58 @@ var File_auth_v1_service_proto protoreflect.FileDescriptor
 
 const file_auth_v1_service_proto_rawDesc = "" +
 	"\n" +
-	"\x15auth/v1/service.proto\x12\aauth.v1\x1a\x16auth/v1/messages.proto\x1a\x17google/rpc/status.proto2\xe8\f\n" +
+	"\x15auth/v1/service.proto\x12\aauth.v1\x1a\x16auth/v1/messages.proto2\xe8\f\n" +
 	"\vAuthService\x12\xa9\x03\n" +
-	"\bRegister\x12\x18.auth.v1.RegisterRequest\x1a\x19.auth.v1.RegisterResponse\"\xe7\x02\x92A\xc3\x02\n" +
-	"\x04Auth\x12\x14Register credentials\x1aPCreates credentials and returns a JWT access token with an opaque refresh token.JQ\n" +
+	"\bRegister\x12\x18.auth.v1.RegisterRequest\x1a\x19.auth.v1.RegisterResponse\"\xe7\x02\x92A\xc3\x02\x12\x14Register credentials\x1aPCreates credentials and returns a JWT access token with an opaque refresh token.JK\n" +
+	"\x03409\x12D\n" +
+	"*An account with this email already exists.\x12\x16\n" +
+	"\x14\x1a\x12.google.rpc.StatusJQ\n" +
 	"\x03201\x12J\n" +
 	")Account created; a new session is opened.\x12\x1d\n" +
 	"\x1b\x1a\x19.auth.v1.RegisterResponseJ3\n" +
 	"\x03400\x12,\n" +
 	"\x12Validation failed.\x12\x16\n" +
-	"\x14\x1a\x12.google.rpc.StatusJK\n" +
-	"\x03409\x12D\n" +
-	"*An account with this email already exists.\x12\x16\n" +
-	"\x14\x1a\x12.google.rpc.Status\x82\xd3\xe4\x93\x02\x1a:\x01*\"\x15/api/v1/auth/register\x12\x80\x03\n" +
-	"\x05Login\x12\x15.auth.v1.LoginRequest\x1a\x16.auth.v1.LoginResponse\"\xc7\x02\x92A\xa6\x02\x12\x05Login\x1aQAuthenticates a user and returns a JWT access token with an opaque refresh token.JA\n" +
-	"\x03401\x12:\n" +
-	" Unknown email or wrong password.\x12\x16\n" +
-	"\x14\x1a\x12.google.rpc.StatusJL\n" +
+	"\x14\x1a\x12.google.rpc.Status\n" +
+	"\x04Auth\x82\xd3\xe4\x93\x02\x1a:\x01*\"\x15/api/v1/auth/register\x12\x80\x03\n" +
+	"\x05Login\x12\x15.auth.v1.LoginRequest\x1a\x16.auth.v1.LoginResponse\"\xc7\x02\x92A\xa6\x02\n" +
+	"\x04Auth\x12\x05Login\x1aQAuthenticates a user and returns a JWT access token with an opaque refresh token.JL\n" +
 	"\x03200\x12E\n" +
 	"'Authenticated; a new session is opened.\x12\x1a\n" +
 	"\x18\x1a\x16.auth.v1.LoginResponseJ3\n" +
 	"\x03400\x12,\n" +
 	"\x12Validation failed.\x12\x16\n" +
+	"\x14\x1a\x12.google.rpc.StatusJA\n" +
+	"\x03401\x12:\x12\x16\n" +
 	"\x14\x1a\x12.google.rpc.Status\n" +
-	"\x04Auth\x82\xd3\xe4\x93\x02\x17:\x01*\"\x12/api/v1/auth/login\x12\xf9\x03\n" +
-	"\aRefresh\x12\x17.auth.v1.RefreshRequest\x1a\x18.auth.v1.RefreshResponse\"\xba\x03\x92A\x97\x03J]\n" +
+	" Unknown email or wrong password.\x82\xd3\xe4\x93\x02\x17:\x01*\"\x12/api/v1/auth/login\x12\xf9\x03\n" +
+	"\aRefresh\x12\x17.auth.v1.RefreshRequest\x1a\x18.auth.v1.RefreshResponse\"\xba\x03\x92A\x97\x03\n" +
+	"\x04Auth\x12\x0eRefresh tokens\x1a\\Rotates an opaque refresh token and returns a new JWT access token with a new refresh token.J]\n" +
 	"\x03200\x12V\n" +
 	"6Tokens rotated; the previous refresh token is revoked.\x12\x1c\n" +
 	"\x1a\x1a\x18.auth.v1.RefreshResponseJ3\n" +
-	"\x03400\x12,\n" +
-	"\x12Validation failed.\x12\x16\n" +
-	"\x14\x1a\x12.google.rpc.StatusJ\x8c\x01\n" +
+	"\x03400\x12,\x12\x16\n" +
+	"\x14\x1a\x12.google.rpc.Status\n" +
+	"\x12Validation failed.J\x8c\x01\n" +
 	"\x03401\x12\x84\x01\n" +
 	"jRefresh token is unknown, expired, or was already rotated (possible theft - the whole session is revoked).\x12\x16\n" +
-	"\x14\x1a\x12.google.rpc.Status\n" +
-	"\x04Auth\x12\x0eRefresh tokens\x1a\\Rotates an opaque refresh token and returns a new JWT access token with a new refresh token.\x82\xd3\xe4\x93\x02\x19:\x01*\"\x14/api/v1/auth/refresh\x12\xa2\x02\n" +
-	"\x06Logout\x12\x16.auth.v1.LogoutRequest\x1a\x17.auth.v1.LogoutResponse\"\xe6\x01\x92A\xc4\x01\n" +
-	"\x04Auth\x12\x06Logout\x1a+Revokes the presented opaque refresh token.JR\n" +
+	"\x14\x1a\x12.google.rpc.Status\x82\xd3\xe4\x93\x02\x19:\x01*\"\x14/api/v1/auth/refresh\x12\xa2\x02\n" +
+	"\x06Logout\x12\x16.auth.v1.LogoutRequest\x1a\x17.auth.v1.LogoutResponse\"\xe6\x01\x92A\xc4\x01\x12\x06Logout\x1a+Revokes the presented opaque refresh token.JR\n" +
 	"\x03200\x12K\n" +
 	",Refresh token revoked; the session is ended.\x12\x1b\n" +
 	"\x19\x1a\x17.auth.v1.LogoutResponseJ3\n" +
 	"\x03400\x12,\n" +
 	"\x12Validation failed.\x12\x16\n" +
-	"\x14\x1a\x12.google.rpc.Status\x82\xd3\xe4\x93\x02\x18:\x01*\"\x13/api/v1/auth/logout\x1a\t\x92A\x06\n" +
+	"\x14\x1a\x12.google.rpc.Status\n" +
+	"\x04Auth\x82\xd3\xe4\x93\x02\x18:\x01*\"\x13/api/v1/auth/logout\x1a\t\x92A\x06\n" +
 	"\x04AuthB\x9e\x03\n" +
-	"\vcom.auth.v1B\fServiceProtoP\x01Z0github.com/dz-market/proto/gen/go/auth/v1;authv1\xa2\x02\x03AXX\xaa\x02\aAuth.V1\xca\x02\aAuth\\V1\xe2\x02\x13Auth\\V1\\GPBMetadata\xea\x02\bAuth::V1\x92A\x90\x02\x12b\n" +
-	"\bAuth API2\x02v1\x12RAuthentication: credentials, JWT access tokens and rotating opaque refresh tokens.2\x10application/json:\x10application/jsonZM\n" +
+	"\vcom.auth.v1B\fServiceProtoP\x01Z0github.com/dz-market/proto/gen/go/auth/v1;authv1\xa2\x02\x03AXX\xaa\x02\aAuth.V1\xca\x02\aAuth\\V1\xe2\x02\x13Auth\\V1\\GPBMetadata\xea\x02\bAuth::V1\x92A\x90\x02ZM\n" +
 	"K\n" +
 	"\n" +
 	"BearerAuth\x12=\b\x02 \x02\x1a\rAuthorization\x12(JWT access token. Format: Bearer {token}R7\n" +
 	"\x03500\x120\n" +
 	"\x16Internal server error.\x12\x16\n" +
-	"\x14\x1a\x12.google.rpc.Statusb\beditionsp\xe9\a"
+	"\x14\x1a\x12.google.rpc.Status\x12b\n" +
+	"\bAuth API2\x02v1\x12RAuthentication: credentials, JWT access tokens and rotating opaque refresh tokens.2\x10application/json:\x10application/jsonb\beditionsp\xe9\a"
 
 var file_auth_v1_service_proto_goTypes = []any{
 	(*RegisterRequest)(nil),  // 0: auth.v1.RegisterRequest
