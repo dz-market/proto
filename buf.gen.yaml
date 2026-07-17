@@ -1,0 +1,34 @@
+version: v2
+
+clean: true
+
+managed:
+    enabled: true
+    disable:
+        - module: buf.build/googleapis/googleapis
+        - module: buf.build/bufbuild/protovalidate
+        - module: buf.build/grpc-ecosystem/grpc-gateway
+    override:
+        - file_option: go_package_prefix
+          value: github.com/dz-market/proto/gen/go
+
+plugins:
+    - remote: buf.build/protocolbuffers/go
+      out: gen/go
+      opt:
+          - paths=source_relative
+
+    - remote: buf.build/grpc/go
+      out: gen/go
+      opt:
+          - paths=source_relative
+
+    - remote: buf.build/grpc-ecosystem/gateway
+      out: gen/go
+      opt:
+          - paths=source_relative
+
+    - remote: buf.build/grpc-ecosystem/openapiv2
+      out: gen/openapiv2
+      opt:
+          - disable_default_responses=true
