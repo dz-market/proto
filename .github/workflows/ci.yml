@@ -43,10 +43,13 @@ jobs:
         if: github.event_name == 'pull_request'
         runs-on: ubuntu-latest
         timeout-minutes: 10
+        permissions:
+            contents: read
+            pull-requests: write
         steps:
             - uses: actions/checkout@v4
             - uses: bufbuild/buf-action@v1
               with:
-                  setup_only: true
-            - name: check breaking changes against base branch
-              run: buf breaking --against "https://github.com/${{ github.repository }}.git#branch=${{ github.base_ref }}"
+                  format: false
+                  lint: false
+                  breaking: true
