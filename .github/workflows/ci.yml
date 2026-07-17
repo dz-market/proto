@@ -1,0 +1,52 @@
+name: ci
+
+on:
+    push:
+        branches: [main]
+    pull_request:
+        branches: [main]
+    workflow_dispatch:
+
+permissions:
+    contents: read
+
+concurrency:
+    group: ${{ github.workflow }}-${{ github.ref }}
+    cancel-in-progress: true
+
+jobs:
+    verify:
+        runs-on: ubuntu-latest
+        timeout-minutes: 10
+        steps:
+            - uses: actions/checkout@v4
+            - uses: bufbuild/buf-action@v1
+              with:
+                  setup_only: true
+            - uses: arduino/setup-task@v2
+              with:
+                  version: 3.x
+                  repo-token: ${{ secrets.GITHUB_TOKEN }}
+            - uses: actions/setup-go@v5
+              with:
+                  go-version-file: go.mod
+            - name: lint
+              run: task lint
+            - name: verify formatting and generated code
+              run: task verify
+            - name: verify go.mod is tidy
+              run: go mod tidy -diff
+            - name: build generated code
+              run: go build ./...
+
+    breaking:
+        if: github.event_name == 'pull_request'
+        runs-on: ubuntu-latest
+        timeout-minutes: 10
+        steps:
+            - uses: actions/checkout@v4
+            - uses: bufbuild/buf-action@v1
+              with:
+                  setup_only: true
+            - name: check breaking changes against base branch
+              run: buf breaking --against "https://github.com/${{ github.repository }}.git#branch=${{ github.base_ref }}"
