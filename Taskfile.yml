@@ -1,0 +1,50 @@
+version: "3"
+
+tasks:
+    deps:
+        desc: Update buf dependencies
+        cmds:
+            - buf dep update
+
+    format:
+        desc: Format proto files
+        cmds:
+            - buf format -w
+
+    lint:
+        desc: Run lint rules
+        cmds:
+            - buf lint
+
+    gen:
+        desc: Format, lint and regenerate all code
+        cmds:
+            - task: format
+            - task: lint
+            - buf generate
+            - go mod tidy
+
+    breaking:
+        desc: Check for breaking changes against main
+        cmds:
+            - buf breaking --against '.git#branch=main'
+
+    verify:
+        desc: Ensure sources are formatted and generated code matches
+        cmds:
+            - buf format --diff --exit-code
+            - buf generate
+            - git diff --exit-code -- gen go.mod go.sum
+
+    release:
+        desc: "Tag and push a release: task release v=X.Y.Z"
+        requires:
+            vars: [v]
+        preconditions:
+            - sh: git diff --quiet
+              msg: Working tree is dirty - commit or stash first
+        cmds:
+            - task: lint
+            - buf breaking --against ".git#tag=$(git describe --tags --abbrev=0)"
+            - git tag "v{{.v}}"
+            - git push origin "v{{.v}}"
