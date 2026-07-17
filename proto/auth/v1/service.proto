@@ -1,0 +1,172 @@
+edition = "2024";
+
+package auth.v1;
+
+import "auth/v1/messages.proto";
+import "google/rpc/status.proto";
+import option "google/api/annotations.proto";
+import option "protoc-gen-openapiv2/options/annotations.proto";
+
+option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_swagger) = {
+  info: {
+    title: "Auth API"
+    version: "v1"
+    description: "Authentication: credentials, JWT access tokens and rotating opaque refresh tokens."
+  }
+  consumes: "application/json"
+  produces: "application/json"
+  security_definitions: {
+    security: {
+      key: "BearerAuth"
+      value: {
+        type: TYPE_API_KEY
+        in: IN_HEADER
+        name: "Authorization"
+        description: "JWT access token. Format: Bearer {token}"
+      }
+    }
+  }
+  responses: {
+    key: "500"
+    value: {
+      description: "Internal server error."
+      schema: {json_schema: {ref: ".google.rpc.Status"}}
+    }
+  }
+};
+
+// Authentication and session lifecycle.
+service AuthService {
+  option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_tag) = {name: "Auth"};
+
+  // Creates credentials and opens a session.
+  rpc Register(RegisterRequest) returns (RegisterResponse) {
+    option (google.api.http) = {
+      post: "/api/v1/auth/register"
+      body: "*"
+    };
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      tags: "Auth"
+      summary: "Register credentials"
+      description: "Creates credentials and returns a JWT access token with an opaque refresh token."
+      responses: {
+        key: "201"
+        value: {
+          description: "Account created; a new session is opened."
+          schema: {json_schema: {ref: ".auth.v1.RegisterResponse"}}
+        }
+      }
+      responses: {
+        key: "400"
+        value: {
+          description: "Validation failed."
+          schema: {json_schema: {ref: ".google.rpc.Status"}}
+        }
+      }
+      responses: {
+        key: "409"
+        value: {
+          description: "An account with this email already exists."
+          schema: {json_schema: {ref: ".google.rpc.Status"}}
+        }
+      }
+    };
+  }
+
+  // Authenticates existing credentials and opens a new session.
+  rpc Login(LoginRequest) returns (LoginResponse) {
+    option (google.api.http) = {
+      post: "/api/v1/auth/login"
+      body: "*"
+    };
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      tags: "Auth"
+      summary: "Login"
+      description: "Authenticates a user and returns a JWT access token with an opaque refresh token."
+      responses: {
+        key: "200"
+        value: {
+          description: "Authenticated; a new session is opened."
+          schema: {json_schema: {ref: ".auth.v1.LoginResponse"}}
+        }
+      }
+      responses: {
+        key: "400"
+        value: {
+          description: "Validation failed."
+          schema: {json_schema: {ref: ".google.rpc.Status"}}
+        }
+      }
+      responses: {
+        key: "401"
+        value: {
+          description: "Unknown email or wrong password."
+          schema: {json_schema: {ref: ".google.rpc.Status"}}
+        }
+      }
+    };
+  }
+
+  // Rotates the refresh token: revokes the presented one and issues a new pair.
+  // Reuse of an already rotated token is treated as theft and revokes the
+  // whole session.
+  rpc Refresh(RefreshRequest) returns (RefreshResponse) {
+    option (google.api.http) = {
+      post: "/api/v1/auth/refresh"
+      body: "*"
+    };
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      tags: "Auth"
+      summary: "Refresh tokens"
+      description: "Rotates an opaque refresh token and returns a new JWT access token with a new refresh token."
+      responses: {
+        key: "200"
+        value: {
+          description: "Tokens rotated; the previous refresh token is revoked."
+          schema: {json_schema: {ref: ".auth.v1.RefreshResponse"}}
+        }
+      }
+      responses: {
+        key: "400"
+        value: {
+          description: "Validation failed."
+          schema: {json_schema: {ref: ".google.rpc.Status"}}
+        }
+      }
+      responses: {
+        key: "401"
+        value: {
+          description: "Refresh token is unknown, expired, or was already rotated (possible theft - the whole session is revoked)."
+          schema: {json_schema: {ref: ".google.rpc.Status"}}
+        }
+      }
+    };
+  }
+
+  // Revokes the presented refresh token and ends its session.
+  rpc Logout(LogoutRequest) returns (LogoutResponse) {
+    option (google.api.http) = {
+      post: "/api/v1/auth/logout"
+      body: "*"
+    };
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      tags: "Auth"
+      summary: "Logout"
+      description: "Revokes the presented opaque refresh token."
+      responses: {
+        key: "200"
+        value: {
+          description: "Refresh token revoked; the session is ended."
+          schema: {json_schema: {ref: ".auth.v1.LogoutResponse"}}
+        }
+      }
+      responses: {
+        key: "400"
+        value: {
+          description: "Validation failed."
+          schema: {json_schema: {ref: ".google.rpc.Status"}}
+        }
+      }
+    };
+  }
+}

@@ -1,0 +1,22 @@
+edition = "2024";
+
+package auth.v1;
+
+import "google/protobuf/timestamp.proto";
+
+// A pair of tokens issued after successful authentication.
+message TokenPair {
+  // Short-lived JWT used to authorize API requests via the
+  // "Authorization: Bearer {token}" header.
+  string access_token = 1;
+
+  // Moment when the access token expires and must be refreshed.
+  google.protobuf.Timestamp access_expires_at = 2;
+
+  // Long-lived opaque token used only to obtain a new pair via Refresh.
+  // Rotated on every use and stored hashed server-side.
+  string refresh_token = 3;
+
+  // Moment when the refresh token expires; after that a full login is required.
+  google.protobuf.Timestamp refresh_expires_at = 4;
+}
