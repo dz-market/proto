@@ -32,3 +32,4 @@ plugins:
       out: gen/openapiv2
       opt:
           - disable_default_responses=true
+          - disable_default_errors=true
