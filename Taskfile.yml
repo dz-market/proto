@@ -16,12 +16,27 @@ tasks:
         cmds:
             - buf lint
 
+    swagger:normalize:
+        desc: Drop per-file swaggers and rename service.swagger.json to <pkg>.<ver>.swagger.json
+        internal: true
+        cmds:
+            - find gen/openapiv2 -type f -name '*.swagger.json' ! -name 'service.swagger.json' -delete
+            - |
+              for f in gen/openapiv2/*/*/service.swagger.json; do
+                [ -e "$f" ] || continue
+                dir=$(dirname "$f")
+                ver=$(basename "$dir")
+                pkg=$(basename "$(dirname "$dir")")
+                mv "$f" "${dir}/${pkg}.${ver}.swagger.json"
+              done
+
     gen:
         desc: Format, lint and regenerate all code
         cmds:
             - task: format
             - task: lint
             - buf generate
+            - task: swagger:normalize
             - go mod tidy
 
     breaking:
@@ -34,6 +49,8 @@ tasks:
         cmds:
             - buf format --diff --exit-code
             - buf generate
+            - task: swagger:normalize
+            - git add -A -N gen
             - git diff --exit-code -- gen go.mod go.sum
 
     release:
@@ -41,10 +58,16 @@ tasks:
         requires:
             vars: [v]
         preconditions:
-            - sh: git diff --quiet
+            - sh: test -z "$(git status --porcelain)"
               msg: Working tree is dirty - commit or stash first
         cmds:
             - task: lint
-            - buf breaking --against ".git#tag=$(git describe --tags --abbrev=0)"
+            - |
+              last_tag=$(git describe --tags --abbrev=0 2>/dev/null || true)
+              if [ -n "$last_tag" ]; then
+                buf breaking --against ".git#tag=${last_tag}"
+              else
+                echo "No tags found - first release, skipping breaking check"
+              fi
             - git tag "v{{.v}}"
             - git push origin "v{{.v}}"
