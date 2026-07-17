@@ -1,0 +1,125 @@
+edition = "2024";
+
+package auth.v1;
+
+import "auth/v1/types.proto";
+import option "buf/validate/validate.proto";
+import option "protoc-gen-openapiv2/options/annotations.proto";
+
+// Request to create new credentials.
+message RegisterRequest {
+  option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_schema) = {
+    json_schema: {
+      required: [
+        "email",
+        "password"
+      ]
+    }
+  };
+
+  // Email used as the login identifier. Must be unique.
+  string email = 1 [
+    (buf.validate.field).required = true,
+    (buf.validate.field).string.email = true,
+    (buf.validate.field).string.max_len = 254,
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      example: '"user@example.com"'
+      max_length: 254
+    }
+  ];
+
+  // Plain-text password. Limited to 72 bytes because bcrypt silently
+  // truncates longer input.
+  string password = 2 [
+    (buf.validate.field).required = true,
+    (buf.validate.field).string.min_len = 8,
+    (buf.validate.field).string.max_bytes = 72,
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      format: "password"
+      min_length: 8
+    }
+  ];
+}
+
+// Response to a successful registration.
+message RegisterResponse {
+  // Identifier of the created user.
+  string user_id = 1 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+    format: "uuid"
+    example: '"6f1c3f9e-2b4d-4a7e-9c1d-8e5b2a0f4c3d"'
+  }];
+
+  // Token pair for the newly created session.
+  TokenPair tokens = 2;
+}
+
+// Request to authenticate with existing credentials.
+message LoginRequest {
+  option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_schema) = {
+    json_schema: {
+      required: [
+        "email",
+        "password"
+      ]
+    }
+  };
+
+  // Email used at registration.
+  string email = 1 [
+    (buf.validate.field).required = true,
+    (buf.validate.field).string.email = true,
+    (buf.validate.field).string.max_len = 254
+  ];
+
+  // Plain-text password.
+  string password = 2 [
+    (buf.validate.field).required = true,
+    (buf.validate.field).string.max_bytes = 72,
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {format: "password"}
+  ];
+}
+
+// Response to a successful login.
+message LoginResponse {
+  // Token pair for the created session.
+  TokenPair tokens = 1;
+}
+
+// Request to exchange a refresh token for a new token pair.
+message RefreshRequest {
+  option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_schema) = {
+    json_schema: {
+      required: ["refresh_token"]
+    }
+  };
+
+  // Current opaque refresh token. It is revoked and replaced on success.
+  string refresh_token = 1 [
+    (buf.validate.field).required = true,
+    (buf.validate.field).string.max_len = 512
+  ];
+}
+
+// Response to a successful refresh.
+message RefreshResponse {
+  // New token pair. The previously presented refresh token is no longer valid.
+  TokenPair tokens = 1;
+}
+
+// Request to revoke a refresh token and end its session.
+message LogoutRequest {
+  option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_schema) = {
+    json_schema: {
+      required: ["refresh_token"]
+    }
+  };
+
+  // Refresh token to revoke.
+  string refresh_token = 1 [
+    (buf.validate.field).required = true,
+    (buf.validate.field).string.max_len = 512
+  ];
+}
+
+// Response to a successful logout.
+message LogoutResponse {}

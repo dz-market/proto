@@ -1,0 +1,372 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "title": "Auth API",
+    "description": "Authentication: credentials, JWT access tokens and rotating opaque refresh tokens.",
+    "version": "v1"
+  },
+  "tags": [
+    {
+      "name": "Auth"
+    }
+  ],
+  "consumes": [
+    "application/json"
+  ],
+  "produces": [
+    "application/json"
+  ],
+  "paths": {
+    "/api/v1/auth/login": {
+      "post": {
+        "summary": "Login",
+        "description": "Authenticates a user and returns a JWT access token with an opaque refresh token.",
+        "operationId": "AuthService_Login",
+        "responses": {
+          "200": {
+            "description": "Authenticated; a new session is opened.",
+            "schema": {
+              "$ref": "#/definitions/v1LoginResponse"
+            }
+          },
+          "400": {
+            "description": "Validation failed.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          },
+          "401": {
+            "description": "Unknown email or wrong password.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          },
+          "500": {
+            "description": "Internal server error.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "description": "Request to authenticate with existing credentials.",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/v1LoginRequest"
+            }
+          }
+        ],
+        "tags": [
+          "Auth"
+        ]
+      }
+    },
+    "/api/v1/auth/logout": {
+      "post": {
+        "summary": "Logout",
+        "description": "Revokes the presented opaque refresh token.",
+        "operationId": "AuthService_Logout",
+        "responses": {
+          "200": {
+            "description": "Refresh token revoked; the session is ended.",
+            "schema": {
+              "$ref": "#/definitions/v1LogoutResponse"
+            }
+          },
+          "400": {
+            "description": "Validation failed.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          },
+          "500": {
+            "description": "Internal server error.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "description": "Request to revoke a refresh token and end its session.",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/v1LogoutRequest"
+            }
+          }
+        ],
+        "tags": [
+          "Auth"
+        ]
+      }
+    },
+    "/api/v1/auth/refresh": {
+      "post": {
+        "summary": "Refresh tokens",
+        "description": "Rotates an opaque refresh token and returns a new JWT access token with a new refresh token.",
+        "operationId": "AuthService_Refresh",
+        "responses": {
+          "200": {
+            "description": "Tokens rotated; the previous refresh token is revoked.",
+            "schema": {
+              "$ref": "#/definitions/v1RefreshResponse"
+            }
+          },
+          "400": {
+            "description": "Validation failed.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          },
+          "401": {
+            "description": "Refresh token is unknown, expired, or was already rotated (possible theft - the whole session is revoked).",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          },
+          "500": {
+            "description": "Internal server error.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "description": "Request to exchange a refresh token for a new token pair.",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/v1RefreshRequest"
+            }
+          }
+        ],
+        "tags": [
+          "Auth"
+        ]
+      }
+    },
+    "/api/v1/auth/register": {
+      "post": {
+        "summary": "Register credentials",
+        "description": "Creates credentials and returns a JWT access token with an opaque refresh token.",
+        "operationId": "AuthService_Register",
+        "responses": {
+          "201": {
+            "description": "Account created; a new session is opened.",
+            "schema": {
+              "$ref": "#/definitions/v1RegisterResponse"
+            }
+          },
+          "400": {
+            "description": "Validation failed.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          },
+          "409": {
+            "description": "An account with this email already exists.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          },
+          "500": {
+            "description": "Internal server error.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "description": "Request to create new credentials.",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/v1RegisterRequest"
+            }
+          }
+        ],
+        "tags": [
+          "Auth"
+        ]
+      }
+    }
+  },
+  "definitions": {
+    "protobufAny": {
+      "type": "object",
+      "properties": {
+        "@type": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": {}
+    },
+    "rpcStatus": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "message": {
+          "type": "string"
+        },
+        "details": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/protobufAny"
+          }
+        }
+      }
+    },
+    "v1LoginRequest": {
+      "type": "object",
+      "properties": {
+        "email": {
+          "type": "string",
+          "description": "Email used at registration."
+        },
+        "password": {
+          "type": "string",
+          "format": "password",
+          "description": "Plain-text password."
+        }
+      },
+      "description": "Request to authenticate with existing credentials.",
+      "required": [
+        "email",
+        "password"
+      ]
+    },
+    "v1LoginResponse": {
+      "type": "object",
+      "properties": {
+        "tokens": {
+          "$ref": "#/definitions/v1TokenPair",
+          "description": "Token pair for the created session."
+        }
+      },
+      "description": "Response to a successful login."
+    },
+    "v1LogoutRequest": {
+      "type": "object",
+      "properties": {
+        "refreshToken": {
+          "type": "string",
+          "description": "Refresh token to revoke."
+        }
+      },
+      "description": "Request to revoke a refresh token and end its session.",
+      "required": [
+        "refreshToken"
+      ]
+    },
+    "v1LogoutResponse": {
+      "type": "object",
+      "description": "Response to a successful logout."
+    },
+    "v1RefreshRequest": {
+      "type": "object",
+      "properties": {
+        "refreshToken": {
+          "type": "string",
+          "description": "Current opaque refresh token. It is revoked and replaced on success."
+        }
+      },
+      "description": "Request to exchange a refresh token for a new token pair.",
+      "required": [
+        "refreshToken"
+      ]
+    },
+    "v1RefreshResponse": {
+      "type": "object",
+      "properties": {
+        "tokens": {
+          "$ref": "#/definitions/v1TokenPair",
+          "description": "New token pair. The previously presented refresh token is no longer valid."
+        }
+      },
+      "description": "Response to a successful refresh."
+    },
+    "v1RegisterRequest": {
+      "type": "object",
+      "properties": {
+        "email": {
+          "type": "string",
+          "example": "user@example.com",
+          "description": "Email used as the login identifier. Must be unique.",
+          "maxLength": 254
+        },
+        "password": {
+          "type": "string",
+          "format": "password",
+          "description": "Plain-text password. Limited to 72 bytes because bcrypt silently\ntruncates longer input.",
+          "minLength": 8
+        }
+      },
+      "description": "Request to create new credentials.",
+      "required": [
+        "email",
+        "password"
+      ]
+    },
+    "v1RegisterResponse": {
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string",
+          "format": "uuid",
+          "example": "6f1c3f9e-2b4d-4a7e-9c1d-8e5b2a0f4c3d",
+          "description": "Identifier of the created user."
+        },
+        "tokens": {
+          "$ref": "#/definitions/v1TokenPair",
+          "description": "Token pair for the newly created session."
+        }
+      },
+      "description": "Response to a successful registration."
+    },
+    "v1TokenPair": {
+      "type": "object",
+      "properties": {
+        "accessToken": {
+          "type": "string",
+          "description": "Short-lived JWT used to authorize API requests via the\n\"Authorization: Bearer {token}\" header."
+        },
+        "accessExpiresAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Moment when the access token expires and must be refreshed."
+        },
+        "refreshToken": {
+          "type": "string",
+          "description": "Long-lived opaque token used only to obtain a new pair via Refresh.\nRotated on every use and stored hashed server-side."
+        },
+        "refreshExpiresAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Moment when the refresh token expires; after that a full login is required."
+        }
+      },
+      "description": "A pair of tokens issued after successful authentication."
+    }
+  },
+  "securityDefinitions": {
+    "BearerAuth": {
+      "type": "apiKey",
+      "description": "JWT access token. Format: Bearer {token}",
+      "name": "Authorization",
+      "in": "header"
+    }
+  }
+}
