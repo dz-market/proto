@@ -20,36 +20,68 @@ jobs:
         timeout-minutes: 10
         steps:
             - uses: actions/checkout@v4
-            - uses: bufbuild/buf-action@v1
-              with:
-                  setup_only: true
+
             - uses: arduino/setup-task@v2
               with:
                   version: 3.x
                   repo-token: ${{ secrets.GITHUB_TOKEN }}
+
             - uses: actions/setup-go@v5
               with:
                   go-version-file: go.mod
-            - name: lint
-              run: task lint
-            - name: verify formatting and generated code
-              run: task verify
+
+            - uses: actions/cache@v4
+              with:
+                  path: bin
+                  key: tools-${{ runner.os }}-${{ hashFiles('Taskfile.yml') }}
+
+            - name: lint and verify generated code
+              run: task lint verify
+
             - name: verify go.mod is tidy
               run: go mod tidy -diff
+
             - name: build generated code
               run: go build ./...
 
     breaking:
-        if: github.event_name == 'pull_request'
         runs-on: ubuntu-latest
         timeout-minutes: 10
-        permissions:
-            contents: read
-            pull-requests: write
         steps:
             - uses: actions/checkout@v4
-            - uses: bufbuild/buf-action@v1
               with:
-                  format: false
-                  lint: false
-                  breaking: true
+                  fetch-depth: 0
+
+            - uses: arduino/setup-task@v2
+              with:
+                  version: 3.x
+                  repo-token: ${{ secrets.GITHUB_TOKEN }}
+
+            - uses: actions/setup-go@v5
+              with:
+                  go-version-file: go.mod
+
+            - uses: actions/cache@v4
+              with:
+                  path: bin
+                  key: tools-${{ runner.os }}-${{ hashFiles('Taskfile.yml') }}
+
+            - name: Resolve baseline
+              id: baseline
+              env:
+                  EVENT: ${{ github.event_name }}
+                  BASE_REF: ${{ github.base_ref }}
+              run: |
+                  if [ "$EVENT" = "pull_request" ]; then
+                    echo "ref=origin/$BASE_REF" >> "$GITHUB_OUTPUT"
+                  else
+                    tag=$(git describe --tags --abbrev=0 2>/dev/null || true)
+                    echo "ref=$tag" >> "$GITHUB_OUTPUT"
+                    [ -n "$tag" ] || echo "::notice::no tags yet, nothing to compare against"
+                  fi
+
+            - name: Check for breaking changes
+              if: steps.baseline.outputs.ref != ''
+              env:
+                  BASELINE: ${{ steps.baseline.outputs.ref }}
+              run: task breaking BASELINE="$BASELINE"
