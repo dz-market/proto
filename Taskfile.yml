@@ -1,58 +1,163 @@
 version: "3"
 
+vars:
+    BUF_VERSION: "v1.72.0"
+    PROTOC_GEN_GO_VERSION: "v1.36.11"
+    PROTOC_GEN_GO_GRPC_VERSION: "v1.6.2"
+    GRPC_GATEWAY_VERSION: "v2.29.0"
+    PROTOVALIDATE_VERSION: "v1.2.2"
+    GOOGLEAPIS_COMMIT: "437254f595a380cd9323111700ce0fcf9d6d2c21"
+
+    BIN_DIR: "{{.ROOT_DIR}}/bin"
+    BUF: "{{.BIN_DIR}}/buf"
+
+    MODULE: "proto"
+    THIRD_PARTY_DIR: "{{.ROOT_DIR}}/third_party"
+
 tasks:
-    deps:
-        desc: Update buf dependencies
+    tools:
+        desc: Install buf and protoc plugins into ./bin
+        run: once
         cmds:
-            - buf dep update
+            - task: tools:install
+              vars: {
+                  NAME: buf,
+                  VERSION: "{{.BUF_VERSION}}",
+                  PKG: "github.com/bufbuild/buf/cmd/buf"
+              }
+            - task: tools:install
+              vars: {
+                  NAME: protoc-gen-go,
+                  VERSION: "{{.PROTOC_GEN_GO_VERSION}}",
+                  PKG: "google.golang.org/protobuf/cmd/protoc-gen-go"
+              }
+            - task: tools:install
+              vars: {
+                  NAME: protoc-gen-go-grpc,
+                  VERSION: "{{.PROTOC_GEN_GO_GRPC_VERSION}}",
+                  PKG: "google.golang.org/grpc/cmd/protoc-gen-go-grpc"
+              }
+            - task: tools:install
+              vars: {
+                  NAME: protoc-gen-grpc-gateway,
+                  VERSION: "{{.GRPC_GATEWAY_VERSION}}",
+                  PKG: "github.com/grpc-ecosystem/grpc-gateway/v2/protoc-gen-grpc-gateway"
+              }
+            - task: tools:install
+              vars: {
+                  NAME: protoc-gen-openapiv2,
+                  VERSION: "{{.GRPC_GATEWAY_VERSION}}",
+                  PKG: "github.com/grpc-ecosystem/grpc-gateway/v2/protoc-gen-openapiv2"
+              }
+
+    tools:install:
+        internal: true
+        label: "tools:install {{.NAME}}@{{.VERSION}}"
+        requires:
+            vars: [NAME, VERSION, PKG]
+        status:
+            - test -x "{{.BIN_DIR}}/{{.NAME}}"
+            - test -f "{{.BIN_DIR}}/.{{.NAME}}-{{.VERSION}}"
+        cmds:
+            - mkdir -p "{{.BIN_DIR}}"
+            - rm -f "{{.BIN_DIR}}/.{{.NAME}}-"*
+            - GOBIN="{{.BIN_DIR}}" go install "{{.PKG}}@{{.VERSION}}"
+            - touch "{{.BIN_DIR}}/.{{.NAME}}-{{.VERSION}}"
+
+    deps:
+        desc: Download third-party protos into ./third_party
+        run: once
+        cmds:
+            - rm -rf "{{.THIRD_PARTY_DIR}}"
+            - task: deps:googleapis
+            - task: deps:protovalidate
+            - task: deps:openapiv2
+
+    deps:googleapis:
+        internal: true
+        vars:
+            FILES: "annotations.proto http.proto"
+        cmds:
+            - mkdir -p "{{.THIRD_PARTY_DIR}}/google/api"
+            - for: {var: FILES}
+              cmd: >-
+                  curl -fsSL --retry 3
+                  -o "{{.THIRD_PARTY_DIR}}/google/api/{{.ITEM}}"
+                  "https://raw.githubusercontent.com/googleapis/googleapis/{{.GOOGLEAPIS_COMMIT}}/google/api/{{.ITEM}}"
+
+    deps:protovalidate:
+        internal: true
+        cmds:
+            - mkdir -p "{{.THIRD_PARTY_DIR}}/buf/validate"
+            - >-
+                curl -fsSL --retry 3
+                -o "{{.THIRD_PARTY_DIR}}/buf/validate/validate.proto"
+                "https://raw.githubusercontent.com/bufbuild/protovalidate/{{.PROTOVALIDATE_VERSION}}/proto/protovalidate/buf/validate/validate.proto"
+
+    deps:openapiv2:
+        internal: true
+        vars:
+            FILES: "annotations.proto openapiv2.proto"
+        cmds:
+            - mkdir -p "{{.THIRD_PARTY_DIR}}/protoc-gen-openapiv2/options"
+            - for: {var: FILES}
+              cmd: >-
+                  curl -fsSL --retry 3
+                  -o "{{.THIRD_PARTY_DIR}}/protoc-gen-openapiv2/options/{{.ITEM}}"
+                  "https://raw.githubusercontent.com/grpc-ecosystem/grpc-gateway/{{.GRPC_GATEWAY_VERSION}}/protoc-gen-openapiv2/options/{{.ITEM}}"
 
     format:
         desc: Format proto files
+        deps: [tools, deps]
         cmds:
-            - buf format -w
+            - "{{.BUF}} format -w {{.MODULE}}"
 
     lint:
         desc: Run lint rules
+        deps: [tools, deps]
         cmds:
-            - buf lint
+            - "{{.BUF}} lint {{.MODULE}}"
 
     swagger:normalize:
-        desc: Drop per-file swaggers and rename service.swagger.json to <pkg>.<ver>.swagger.json
         internal: true
         cmds:
-            - find gen/openapiv2 -type f -name '*.swagger.json' ! -name 'service.swagger.json' -delete
+            - find gen/openapiv2 -name '*.swagger.json' ! -name 'service.swagger.json' -delete
             - |
-              for f in gen/openapiv2/*/*/service.swagger.json; do
-                [ -e "$f" ] || continue
-                dir=$(dirname "$f")
-                ver=$(basename "$dir")
-                pkg=$(basename "$(dirname "$dir")")
-                mv "$f" "${dir}/${pkg}.${ver}.swagger.json"
-              done
+                for f in gen/openapiv2/*/*/service.swagger.json; do
+                  [ -e "$f" ] || continue
+                  dir=${f%/*}
+                  ver=${dir##*/}
+                  pkg=${dir%/*}
+                  mv "$f" "$dir/${pkg##*/}.$ver.swagger.json"
+                done
 
     gen:
         desc: Format, lint and regenerate all code
+        deps: [tools, deps]
         cmds:
             - task: format
             - task: lint
-            - buf generate
+            - "{{.BUF}} generate {{.MODULE}}"
             - task: swagger:normalize
             - go mod tidy
 
     breaking:
-        desc: Check for breaking changes against main
+        desc: "Check for breaking changes: task breaking [BASELINE=<git ref>]"
+        deps: [tools, deps]
+        vars:
+            BASELINE: '{{.BASELINE | default "origin/main"}}'
         cmds:
-            - buf breaking --against '.git#branch=main'
+            - "{{.BUF}} breaking {{.MODULE}} --against '.git#ref={{.BASELINE}},subdir={{.MODULE}}'"
 
     verify:
-        desc: Ensure sources are formatted and generated code matches
+        desc: Ensure deps, formatting and generated code all match the sources
+        deps: [tools, deps]
         cmds:
-            - buf format --diff --exit-code
-            - buf generate
+            - "{{.BUF}} format --diff --exit-code {{.MODULE}}"
+            - "{{.BUF}} generate {{.MODULE}}"
             - task: swagger:normalize
             - git add -A -N gen
-            - git diff --exit-code -- gen go.mod go.sum ':(exclude)gen/go/**/service.pb.go'
-            - git checkout -- 'gen/go/**/service.pb.go'
+            - git diff --exit-code -- gen go.mod go.sum
 
     release:
         desc: "Tag and push a release: task release v=X.Y.Z"
@@ -62,11 +167,11 @@ tasks:
             - sh: test -z "$(git status --porcelain)"
               msg: Working tree is dirty - commit or stash first
         cmds:
-            - task: lint
+            - task: verify
             - |
               last_tag=$(git describe --tags --abbrev=0 2>/dev/null || true)
               if [ -n "$last_tag" ]; then
-                buf breaking --against ".git#tag=${last_tag}"
+                {{.BUF}} breaking {{.MODULE}} --against ".git#tag=${last_tag},subdir={{.MODULE}}"
               else
                 echo "No tags found - first release, skipping breaking check"
               fi

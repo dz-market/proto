@@ -707,10 +707,10 @@ const file_auth_v1_messages_proto_rawDesc = "" +
 	"\x0fRegisterRequest\x12=\n" +
 	"\x05email\x18\x01 \x01(\tB'\x92A\x17J\x12\"user@example.com\"x\xfe\x01\xbaH\n" +
 	"\xc8\x01\x01r\x05\x18\xfe\x01`\x01R\x05email\x129\n" +
-	"\bpassword\x18\x02 \x01(\tB\x1d\x92A\x0e\xa2\x02\bpassword\x80\x01\b\xbaH\t\xc8\x01\x01r\x04\x10\b(HR\bpassword:\x18\x92A\x15\n" +
+	"\bpassword\x18\x02 \x01(\tB\x1d\x92A\x0e\x80\x01\b\xa2\x02\bpassword\xbaH\t\xc8\x01\x01r\x04\x10\b(HR\bpassword:\x18\x92A\x15\n" +
 	"\x13\xd2\x01\x05email\xd2\x01\bpassword\"\x8b\x01\n" +
 	"\x10RegisterResponse\x12K\n" +
-	"\auser_id\x18\x01 \x01(\tB2\x92A/\xa2\x02\x04uuidJ&\"6f1c3f9e-2b4d-4a7e-9c1d-8e5b2a0f4c3d\"R\x06userId\x12*\n" +
+	"\auser_id\x18\x01 \x01(\tB2\x92A/J&\"6f1c3f9e-2b4d-4a7e-9c1d-8e5b2a0f4c3d\"\xa2\x02\x04uuidR\x06userId\x12*\n" +
 	"\x06tokens\x18\x02 \x01(\v2\x12.auth.v1.TokenPairR\x06tokens\"\x83\x01\n" +
 	"\fLoginRequest\x12#\n" +
 	"\x05email\x18\x01 \x01(\tB\r\xbaH\n" +
@@ -728,7 +728,7 @@ const file_auth_v1_messages_proto_rawDesc = "" +
 	"\rrefresh_token\x18\x01 \x01(\tB\v\xbaH\b\xc8\x01\x01r\x03\x18\x80\x04R\frefreshToken:\x15\x92A\x12\n" +
 	"\x10\xd2\x01\rrefresh_token\"\x10\n" +
 	"\x0eLogoutResponseB\x8b\x01\n" +
-	"\vcom.auth.v1B\rMessagesProtoP\x01Z0github.com/dz-market/proto/gen/go/auth/v1;authv1\xa2\x02\x03AXX\xaa\x02\aAuth.V1\xca\x02\aAuth\\V1\xe2\x02\x13Auth\\V1\\GPBMetadata\xea\x02\bAuth::V1b\beditionsp\xe9\a"
+	"\vcom.auth.v1B\rMessagesProtoP\x01Z0github.com/dz-market/proto/gen/go/auth/v1;authv1\xa2\x02\x03AXX\xaa\x02\aAuth.V1\xca\x02\aAuth\\V1\xe2\x02\x13Auth\\V1\\GPBMetadata\xea\x02\bAuth::V1b\beditionsp\xe9\az\x1bbuf/validate/validate.protoz.protoc-gen-openapiv2/options/annotations.proto"
 
 var file_auth_v1_messages_proto_msgTypes = make([]protoimpl.MessageInfo, 8)
 var file_auth_v1_messages_proto_goTypes = []any{
